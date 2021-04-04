@@ -1,0 +1,47 @@
+body{background-color: chartreuse;}
+
+main form{
+    width: 100%;
+    height: 100%;
+    background-color: red;
+}
+main h4{
+    width: 100%;
+    height: 10%;
+    background-color:darkslategray;
+    text-align: center;
+    font-size: xxx-large;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+ #finput{
+    text-align: center;
+    margin-top: 5%;
+    margin-left: 20%;
+    width: 60%;
+    height: 10%;
+    background-color: white;
+    font-size:xx-large;
+}
+
+fieldset {
+    margin-top: 5%;
+    margin-left: 20%;
+    width: 60%;
+    height: 10%;
+    background-color:gray; 
+    font-size:xx-large;
+}
+
+button  {
+    width: 60%;
+    height: 10%;
+    margin-top: 5%;
+    margin-left: 20%;
+    background-color: black;
+    color: white;
+    font-size: x-large;
+}
+
