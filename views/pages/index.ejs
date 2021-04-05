@@ -7,7 +7,13 @@
   <body>
     <main>
       <h4>My Book Collection</h4>
-
+      <div>
+        <% result.forEach( data => { %>
+          <img src='<%=data.image_url  %>'/>
+            <h3><%= data.title %></h3>
+            <h4><%= data.author %></h4>
+        <% }) %>
+      </div>
     </main>
   </body>
 </html>
