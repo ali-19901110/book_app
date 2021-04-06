@@ -4,5 +4,5 @@ CREATE TABLE IF NOT EXISTS books(
     title  LONGTEXT,
     isbn   LONGTEXT,
     image_url LONGTEXT,
-    description VARCHAR(255)
+    description LONGTEXT
 )
