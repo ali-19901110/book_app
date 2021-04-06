@@ -24,6 +24,8 @@ client.on('error',err=>console.log(err));
 // Renders the home page
 app.get('/', renderHomePage);
 
+app.get('/books',renderBooks);
+
 app.get('/books/:id', getOneBook);
 
 // Renders the search form
@@ -51,7 +53,7 @@ function Book(info) {
   this.description =info.description ||'No description available';
   this.authors = info.authors ||'No authors available';
   this.img =info.imageLinks ||placeholderImage;
-  this.isbn=info.industryIdentifiers[0].identifier;
+  this.isbn=(info.industryIdentifiers)?info.industryIdentifiers[0].identifier:'not avilabl';
 
 }
 
@@ -81,7 +83,28 @@ function getOneBook(req ,res){
  })
 }
 
+function renderBooks(req ,res){
+  
+  const title = req.body.title
+  const description = req.body.description
+  const isbn = req.body.isbn
+  const image_url = req.body.image_url
+  const author = req.body.author
 
+  
+  const values = [title, description,isbn , image_url,author];
+
+  // insert into my database
+  const SQL = `INSERT 
+      INTO books (title, description,isbn,image_url,author)
+      VALUES ($1, $2, $3, $4,$5) RETURNING * 
+       `;
+
+  client.query(SQL, values).then(()=> {
+      response.redirect('/ ');
+  })
+
+}
 
 
 function showForm(request, response) {
@@ -104,17 +127,33 @@ function createSearch(request, response) {
 
   superagent.get(url)
     .then(apiResponse => {
-      // console.log("apiResponse.body", apiResponse.body.items[0]);
-      // .volumeInfo > industryIdentifiers >.identifier
-      let neArr={}
-      neArr= apiResponse.body.items[0];
-      //  console.log(neArr);
-      let valuesArray = Object.keys(neArr).map(function(k) {
-
-       console.log(neArr[k]);
+    
+    //  let neArr= apiResponse.body.items;
+    //  let neob={}
+    //   neArr.map(el=>{
+    //     neob = el.volumeInfo
+    //   });
+    // //      //  console.log(neob);
      
-     });
-    //  console.log(valuesArray);
+    // //      // console.log(neob.imageLinks.smallThumbnail)
+    // //     // console.log(neob.description)
+    // //   //  console.log(neob.title)
+    // //   //  console.log(neob.authors[0])
+    // //   //  console.log(neob.industryIdentifiers);
+    //   let ispn =0;
+    //    neob.industryIdentifiers.forEach(el=>{
+    //     ispn=el.identifier;
+    //    })
+    //   const values = [neob.title,neob.authors[0],ispn,neob.imageLinks.smallThumbnail,neob.description];
+
+    //   // insert into my database
+    //   const SQL = `INSERT 
+    //       INTO books (title, author, isbn, image_url,description)
+    //       VALUES ($1, $2, $3, $4,$5) RETURNING * 
+    //        `;
+    //     //    client.query(SQL, values).then(()=> {
+    //     //     response.redirect('/books');
+    //     // })
       return apiResponse.body.items.map(bookResult => new Book(bookResult.volumeInfo))
      })
     .then(results => response.render('pages/show', { searchResults: results })).catch((err)=> {

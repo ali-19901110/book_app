@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS books(
     id SERIAL PRIMARY KEY ,
-    author VARCHAR(255),
-    title  VARCHAR(255),
-    isbn   VARCHAR(255),
+    author LONGTEXT,
+    title  LONGTEXT,
+    isbn   LONGTEXT,
     image_url LONGTEXT,
     description VARCHAR(255)
 )
