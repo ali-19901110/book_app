@@ -1,0 +1,17 @@
+<section>
+    <h2>Add a new Book</h2>
+    <form  method="post" action="/books/<%= book.id %>?_method=PUT">
+        <legend>Add Book</legend>
+        <input type="text" name="title" placeholder="title" value="<%=book.title%>" />
+        <input name="description"  placeholder="Add Description" value="<%=book.description%>">
+        <input type="text" name="isbn"  value="<%= book.isbn%>"/>
+        <input type="text" name="img"  value="<%=book.image_url%>"/>
+        <button type="submit">Updat</button>
+    </form>
+
+    <form action="/books/<%= book.id %>?_method=DELETE" method="POST">
+    
+      <button>DELETE</button>
+    
+    </form>
+</section>

@@ -6,6 +6,7 @@ const express = require('express');
 const superagent = require('superagent');
 const pg = require('pg');
 const { response } = require('express');
+const methodoverride = require('method-override');
 
 // Application Setup
 const app = express();
@@ -14,6 +15,7 @@ const PORT = process.env.PORT || 3000;
 // Application Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('./public'));
+app.use(methodoverride('_method'));
 
 // Set the view engine for server-side templating
 app.set('view engine', 'ejs');
@@ -24,9 +26,11 @@ client.on('error',err=>console.log(err));
 // Renders the home page
 app.get('/', renderHomePage);
 
-app.get('/books',renderBooks);
+app.post('/books', renderBooks);
 
 app.get('/books/:id', getOneBook);
+app.put('/books/:id', updateOneBook);
+app.delete('/books/:id', deleteOneBook);
 
 // Renders the search form
 app.get('/searches/new', showForm);
@@ -78,19 +82,22 @@ function getOneBook(req ,res){
   const SQL ='SELECT * FROM books WHERE id=$1';
  const values =[id];
  client.query(SQL,values).then(rsult=>{
-   res.render('pages/books/show',{book:rsult.rows})
-   
+   res.render('pages/books/details',{book:rsult.rows})
+  //  console.log(rsult.rows);
  })
 }
 
-function renderBooks(req ,res){
-  
-  const title = req.body.title
-  const description = req.body.description
-  const isbn = req.body.isbn
-  const image_url = req.body.image_url
-  const author = req.body.author
 
+function renderBooks(request, response) {
+  console.log(request.body);
+
+  // JS ES6 destructing
+  // const {title, description, category, status} = request.body;
+  const title = request.body.title
+  const description = request.body.description
+  const image_url = request.body.image_url
+  const author = request.body.author
+  const isbn = request.body.isbn
   
   const values = [title, description,isbn , image_url,author];
 
@@ -99,13 +106,43 @@ function renderBooks(req ,res){
       INTO books (title, description,isbn,image_url,author)
       VALUES ($1, $2, $3, $4,$5) RETURNING * 
        `;
-
+   
   client.query(SQL, values).then(()=> {
-      response.redirect('/ ');
+      response.redirect('/');
   })
-
 }
 
+
+function updateOneBook(request, response) {
+  const id = request.params.id;
+  // console.log(id);
+  const {title, description, isbn, author} = request.body;
+  let SQL = `UPDATE books 
+      SET 
+          title=$1, description=$2, isbn=$3, author=$4
+      WHERE 
+          id=$5`
+  
+  let values = [title, description, isbn, author, id];
+  client.query(SQL, values).then(results=> {
+    // console.log(SQL);
+      response.redirect(`/books/${id}`);
+  }).catch(e=> {
+    console.log('erorrrrrrrrrrrrrrrrrrrrrr in edit')
+});
+}
+
+function deleteOneBook(request, response){
+  const id = request.params.id;
+  let SQL = `DELETE FROM books 
+  WHERE 
+      id=$1`
+     let values = [id];
+      client.query(SQL, values).then(results=> {
+        // console.log(SQL);
+          response.redirect('/');
+      });
+}
 
 function showForm(request, response) {
   // console.log("inside of searches!!")
@@ -128,32 +165,6 @@ function createSearch(request, response) {
   superagent.get(url)
     .then(apiResponse => {
     
-    //  let neArr= apiResponse.body.items;
-    //  let neob={}
-    //   neArr.map(el=>{
-    //     neob = el.volumeInfo
-    //   });
-    // //      //  console.log(neob);
-     
-    // //      // console.log(neob.imageLinks.smallThumbnail)
-    // //     // console.log(neob.description)
-    // //   //  console.log(neob.title)
-    // //   //  console.log(neob.authors[0])
-    // //   //  console.log(neob.industryIdentifiers);
-    //   let ispn =0;
-    //    neob.industryIdentifiers.forEach(el=>{
-    //     ispn=el.identifier;
-    //    })
-    //   const values = [neob.title,neob.authors[0],ispn,neob.imageLinks.smallThumbnail,neob.description];
-
-    //   // insert into my database
-    //   const SQL = `INSERT 
-    //       INTO books (title, author, isbn, image_url,description)
-    //       VALUES ($1, $2, $3, $4,$5) RETURNING * 
-    //        `;
-    //     //    client.query(SQL, values).then(()=> {
-    //     //     response.redirect('/books');
-    //     // })
       return apiResponse.body.items.map(bookResult => new Book(bookResult.volumeInfo))
      })
     .then(results => response.render('pages/show', { searchResults: results })).catch((err)=> {
