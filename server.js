@@ -21,10 +21,17 @@ app.use(methodoverride('_method'));
 app.set('view engine', 'ejs');
 const client =new pg.Client(process.env.DATABASE_URL);
 client.on('error',err=>console.log(err));
+//console.log("Database_URL", process.env.DATABASE_URL);
 
 // API Routes
 // Renders the home page
 app.get('/', renderHomePage);
+// app.get('/app/:id', checkUserAuth, findApp, renderView, sendJSON);
+
+// function checkUserAuth(req, res, next) {
+//   if (req.session.user) return next();
+//   return next(new NotAuthorizedError());
+// }
 
 app.post('/books', renderBooks);
 
@@ -57,8 +64,9 @@ function Book(info) {
   this.description =info.description ||'No description available';
   this.authors = info.authors ||'No authors available';
   this.img =info.imageLinks ||placeholderImage;
+  // this.img=(info.imageLinks)?info.imageLinks:'not avilabl';
   this.isbn=(info.industryIdentifiers)?info.industryIdentifiers[0].identifier:'not avilabl';
-
+  
 }
 
 // Note that .ejs file extension is not required
@@ -87,10 +95,10 @@ function getOneBook(req ,res){
  })
 }
 
-
 function renderBooks(request, response) {
-  console.log(request.body);
-
+  // console.log(request.body);
+  // const id = request.body.id;
+  // console.log(id);
   // JS ES6 destructing
   // const {title, description, category, status} = request.body;
   const title = request.body.title
@@ -99,17 +107,38 @@ function renderBooks(request, response) {
   const author = request.body.author
   const isbn = request.body.isbn
   
-  const values = [title, description,isbn , image_url,author];
 
   // insert into my database
-  const SQL = `INSERT 
-      INTO books (title, description,isbn,image_url,author)
-      VALUES ($1, $2, $3, $4,$5) RETURNING * 
-       `;
-   
-  client.query(SQL, values).then(()=> {
-      response.redirect('/');
-  })
+     const SQL1=`select * from author where name =$1` 
+    let values1 = [author];
+    client.query(SQL1,values1).then((result)=>{
+       if(result.rowCount){
+       let nevar =  result.rows[0].id;
+       const SQL = `INSERT 
+       INTO books (title, description,isbn,image_url,author_id)
+       VALUES ($1, $2, $3, $4,$5) RETURNING * 
+        `;
+        const values = [title, description,isbn , image_url,nevar];
+        client.query(SQL, values).then(()=> {
+          response.redirect('/');
+      });
+       }else{
+        const sql3 =`insert into author(name) values($1) RETURNING *`;
+        let values3=[author];
+      client.query(sql3,values3).then((result)=>{
+        let nevar =  result.rows[0].id;
+        const SQL = `INSERT 
+        INTO books (title, description,isbn,image_url,author_id)
+        VALUES ($1, $2, $3, $4,$5) RETURNING * 
+         `;
+         const values = [title, description,isbn , image_url,nevar];
+         client.query(SQL, values).then(()=> {
+           response.redirect('/');
+       });
+      });
+      
+       }
+    })
 }
 
 
@@ -117,6 +146,14 @@ function updateOneBook(request, response) {
   const id = request.params.id;
   // console.log(id);
   const {title, description, isbn, author} = request.body;
+
+//  let sql5=`UPDATE author a INNER JOIN books b ON a.SelectedName= b.Name 
+//    SET a.name= b.Id`
+//    SELECT NameId, SelectedName 
+// FROM table_1 
+// WHERE SelectedName IN (SELECT Name FROM table_2);
+// UPDATE books SET author_id=author.id FROM (SELECT * FROM author) AS author WHERE books.author = author.name;
+
   let SQL = `UPDATE books 
       SET 
           title=$1, description=$2, isbn=$3, author=$4
